@@ -3,7 +3,6 @@ window.addEventListener("load", function () {
   const settingsIcon = document.getElementById("settingsIcon");
   settingsIcon.addEventListener("click", function () {
     const settingsModal = document.getElementById("settingsModal");
-    console.log("wtf");
     settingsModal.classList.toggle("hidden");
   });
 
@@ -11,6 +10,16 @@ window.addEventListener("load", function () {
   closeSettingsButton.addEventListener("click", function () {
     const settingsModal = document.getElementById("settingsModal");
     settingsModal.classList.toggle("hidden");
+  });
+
+  // enable fullscreen
+  const fullscreenButton = document.getElementById("openFullscreenIcon");
+  fullscreenButton.addEventListener("click", function () {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      document.documentElement.requestFullscreen();
+    }
   });
 
   // create audiocontext
@@ -22,6 +31,22 @@ window.addEventListener("load", function () {
   canvas.height = document.documentElement.clientHeight;
   canvas.style.backgroundColor = "#ffffff";
 
+  canvas.addEventListener("click", function () {
+    if (!settingsModal.classList.contains("hidden")) {
+      settingsModal.classList.toggle("hidden");
+    } else {
+      settingsIcon.classList.toggle("hidden");
+      fullscreenButton.classList.toggle("hidden");
+      if (document.fullscreenElement) {
+        if (document.body.style.cursor === "none") {
+          document.body.style.cursor = "default";
+        } else {
+          document.body.style.cursor = "none";
+        }
+      }
+    }
+  });
+
   // create initial visualiser
   const visualizer = butterchurn.default.createVisualizer(
     audioContext,
@@ -30,6 +55,12 @@ window.addEventListener("load", function () {
       width: this.document.documentElement.clientWidth,
       height: this.document.documentElement.clientHeight,
     }
+  );
+
+  // set initial renderer size
+  visualizer.setRendererSize(
+    document.documentElement.clientWidth,
+    document.documentElement.clientHeight
   );
 
   // create audioNode from microphone
@@ -49,14 +80,15 @@ window.addEventListener("load", function () {
   });
   const preset =
     presets["Flexi, martin + geiss - dedicated to the sherwin maxawow"];
+  visualizer.loadPreset(preset, 5.0); // 2nd argument is the number of seconds to blend presets
+  presetSelect.value =
+    "Flexi, martin + geiss - dedicated to the sherwin maxawow";
 
-  visualizer.loadPreset(preset, 0.0); // 2nd argument is the number of seconds to blend presets
-
-  // resize visualizer
-  visualizer.setRendererSize(
-    document.documentElement.clientWidth,
-    document.documentElement.clientHeight
-  );
+  // enable preset selection
+  presetSelect.addEventListener("change", function () {
+    const preset = presets[presetSelect.value];
+    visualizer.loadPreset(preset, 5.0);
+  });
 
   // ensure canvas always fills the window
   window.addEventListener("resize", function () {
