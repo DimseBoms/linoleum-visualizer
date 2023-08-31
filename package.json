@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "build": "browserify ./scripts/visualizer.js -o ./scripts/main.js"
+  },
+  "dependencies": {
+    "realtime-bpm-analyzer": "^3.2.1"
+  }
+}

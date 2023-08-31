@@ -1,4 +1,4 @@
-window.addEventListener("load", function () {
+window.addEventListener("load", async function () {
   // make settings modal dynamic
   const settingsIcon = document.getElementById("settingsIcon");
   settingsIcon.addEventListener("click", function () {
@@ -42,6 +42,14 @@ window.addEventListener("load", function () {
           document.body.style.cursor = "default";
         } else {
           document.body.style.cursor = "none";
+          // set cursor back to default if fullscreen is exited
+          document.addEventListener("fullscreenchange", function () {
+            document.body.style.cursor = "default";
+            // remove event listener to avoid memory leak
+            document.removeEventListener("fullscreenchange", function () {
+              document.body.style.cursor = "default";
+            });
+          });
         }
       }
     }
@@ -106,4 +114,11 @@ window.addEventListener("load", function () {
   }
 
   requestAnimationFrame(animate); // start the animation loop
+
+  console.log("trying to load bpm analyzer");
+  const realtimeBpmAnalyzer = require("realtime-bpm-analyzer");
+  console.log(realtimeBpmAnalyzer);
+
+  // initialize bpm analyzer
+  const realtimeAnalyzerNode = await realtimeBpmAnalyzer(audioContext);
 });
