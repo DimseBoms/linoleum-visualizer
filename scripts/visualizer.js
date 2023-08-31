@@ -113,26 +113,43 @@ window.addEventListener("load", async function () {
   navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
     const microphone = audioContext.createMediaStreamSource(stream);
     visualizer.connectAudio(microphone);
+    // save the last x seconds of audio, decode the audio to get the buffer
+    // and read that array as a buffer which is sent to calcTempo
+    var bufferSourceNode = audioContext.createBufferSource();
     var scriptProcessorNode = audioContext.createScriptProcessor(4096, 1, 1);
     scriptProcessorNode.connect(audioContext.destination);
     microphone.connect(scriptProcessorNode);
-
-    var options = {
-      tempoTolerance: 5, // tolerance in BPM for tempo adaptation
-      minTempo: 60, // minimum tempo in BPM
-      maxTempo: 180, // maximum tempo in BPM
-      onsetThreshold: 0.2, // threshold for onset detection
-      onsetHistory: 10, // number of previous onsets to consider for tempo estimation
-    };
-    var musicTempo = new MusicTempo(scriptProcessorNode, options);
-
+    var duration = 10; // capture the last 10 seconds of audio
+    var sampleRate = audioContext.sampleRate;
+    var bufferSize = duration * sampleRate; // 10 seconds * 44100 samples per second = 441000 samples
+    var audioData = new Float32Array(bufferSize); // create a typed array of 441000 elements
+    audioData.fill(0); // fill the array with zeros
     scriptProcessorNode.onaudioprocess = function(e) {
       var inputBuffer = e.inputBuffer.getChannelData(0);
-      musicTempo.processAudioBuffer(inputBuffer);
-    };
-
-    musicTempo.ontempoupdated = function(e) {
-      console.log('BPM:', e.detail.bpm);
+      var bufferLength = inputBuffer.length;
+      // shift the audio data array by one buffer length
+      audioData.copyWithin(0, bufferLength, bufferSize);
+      // copy the input buffer to the end of the audio data array
+      audioData.set(inputBuffer, bufferSize - bufferLength);
     };
   });
+
+  var calcTempo = function (buffer) {
+    var audioData = [];
+    // Take the average of the two channels
+    if (buffer.numberOfChannels == 2) {
+      var channel1Data = buffer.getChannelData(0);
+      var channel2Data = buffer.getChannelData(1);
+      var length = channel1Data.length;
+      for (var i = 0; i < length; i++) {
+        audioData[i] = (channel1Data[i] + channel2Data[i]) / 2;
+      }
+    } else {
+      audioData = buffer.getChannelData(0);
+    }
+    var mt = new MusicTempo(audioData);
+
+    console.log(mt.tempo);
+    console.log(mt.beats);
+  };
 });
