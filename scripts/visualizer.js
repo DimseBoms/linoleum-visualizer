@@ -116,9 +116,5 @@ window.addEventListener("load", async function () {
   requestAnimationFrame(animate); // start the animation loop
 
   console.log("trying to load bpm analyzer");
-  const realtimeBpmAnalyzer = require("realtime-bpm-analyzer");
-  console.log(realtimeBpmAnalyzer);
-
-  // initialize bpm analyzer
-  const realtimeAnalyzerNode = await realtimeBpmAnalyzer(audioContext);
+  const mt = new MusicTempo();
 });
