@@ -1,0 +1,87 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+#canvas {
+  position: absolute;
+  z-index: 0;
+}
+
+#settingsModal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -100px;
+  margin-top: -50px;
+  padding: 12px;
+  z-index: 2;
+  border-radius: 3%;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.settingsModalHeader {
+  margin-bottom: 12px;
+}
+
+#presetSelect {
+  padding: 8px;
+}
+
+#presetBpmControl {
+  padding: 8px;
+}
+
+.settingsModalBodyContentItem {
+  margin-bottom: 12px;
+}
+
+#closeSettingsButton {
+  padding: 8px;
+}
+
+.settings {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 50px;
+  padding: 4px;
+  margin: 12px;
+  z-index: 1;
+  background: #fff;
+  border-radius: 20%;
+  cursor: pointer;
+}
+
+.openFullscreenIcon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 50px;
+  height: 50px;
+  padding: 4px;
+  margin: 12px;
+  z-index: 1;
+  background: #fff;
+  border-radius: 20%;
+  cursor: pointer;
+}
+
+.closeFullscreenIcon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 50px;
+  height: 50px;
+  padding: 4px;
+  margin: 12px;
+  z-index: 1;
+  background: #fff;
+  border-radius: 20%;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}

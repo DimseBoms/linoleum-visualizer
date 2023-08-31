@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="no">
+  <script type="text/javascript" src="libs/butterchurn.js"></script>
+  <script type="text/javascript" src="libs/butterchurnPresets.min.js"></script>
+  <script
+    type="text/javascript"
+    src="libs/butterchurnPresetsExtra.min.js"
+  ></script>
+  <script src="scripts/visualizer.js"></script>
+  <link rel="stylesheet" href="styles/styles.css" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linoleum Band Visualizer</title>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <!-- Settings modal -->
+    <div class="hidden" id="settingsModal">
+      <div class="settingsModalContent">
+        <div class="settingsModalHeader">
+          <h2>Settings</h2>
+        </div>
+        <div class="settingsModalBody">
+          <div class="settingsModalBodyContent">
+            <div class="settingsModalBodyContentItem">
+              <label for="presetSelect">Preset</label>
+              <select id="presetSelect"></select>
+            </div>
+            <div class="settingsModalBodyContentItem">
+              <label for="presetBpmControl">BPM controlled presets</label>
+              <input
+                type="checkbox"
+                id="presetBpmControl"
+                name="presetBpmControl"
+                checked
+              />
+            </div>
+          </div>
+        </div>
+        <div class="settingsModalFooter">
+          <button id="closeSettingsButton">Close</button>
+        </div>
+      </div>
+    </div>
+    <!-- End of settings modal -->
+    <img src="assets/icons/settings.svg" alt="settings icon" class="settings" id="settingsIcon" />
+    <img
+      src="assets/icons/open_full.svg"
+      alt="open full icon"
+      class="openFullscreenIcon"
+    />
+    <img
+      src="assets/icons/close_full.svg"
+      alt="close full icon"
+      class="closeFullscreenIcon hidden"
+    />
+  </body>
+</html>
