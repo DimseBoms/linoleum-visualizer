@@ -71,12 +71,6 @@ window.addEventListener("load", async function () {
     document.documentElement.clientHeight
   );
 
-  // create audioNode from microphone
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-    const microphone = audioContext.createMediaStreamSource(stream);
-    visualizer.connectAudio(microphone);
-  });
-
   // populate and load presets
   const presets = butterchurnPresets.getPresets();
   const presetNames = Object.keys(presets);
@@ -115,6 +109,30 @@ window.addEventListener("load", async function () {
 
   requestAnimationFrame(animate); // start the animation loop
 
-  console.log("trying to load bpm analyzer");
-  const mt = new MusicTempo();
+  // create audioNode from microphone
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+    const microphone = audioContext.createMediaStreamSource(stream);
+    visualizer.connectAudio(microphone);
+    var scriptProcessorNode = audioContext.createScriptProcessor(4096, 1, 1);
+    scriptProcessorNode.connect(audioContext.destination);
+    microphone.connect(scriptProcessorNode);
+
+    var options = {
+      tempoTolerance: 5, // tolerance in BPM for tempo adaptation
+      minTempo: 60, // minimum tempo in BPM
+      maxTempo: 180, // maximum tempo in BPM
+      onsetThreshold: 0.2, // threshold for onset detection
+      onsetHistory: 10, // number of previous onsets to consider for tempo estimation
+    };
+    var musicTempo = new MusicTempo(scriptProcessorNode, options);
+
+    scriptProcessorNode.onaudioprocess = function(e) {
+      var inputBuffer = e.inputBuffer.getChannelData(0);
+      musicTempo.processAudioBuffer(inputBuffer);
+    };
+
+    musicTempo.ontempoupdated = function(e) {
+      console.log('BPM:', e.detail.bpm);
+    };
+  });
 });
