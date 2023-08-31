@@ -1,0 +1,24 @@
+{
+  "name": "linoleum-visualizer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DimseBoms/linoleum-visualizer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DimseBoms/linoleum-visualizer/issues"
+  },
+  "homepage": "https://github.com/DimseBoms/linoleum-visualizer#readme",
+  "dependencies": {
+    "butterchurn": "^2.6.7",
+    "butterchurn-presets": "^2.4.7"
+  }
+}
