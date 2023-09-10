@@ -143,86 +143,101 @@ window.addEventListener("load", async function () {
     visualizer.connectAudio(microphone);
   });
 
-  // custom bpm presets
-  const customBpmPresets = [];
-  function createEmptyPreset() {
-    const presetId = Math.random().toString(36).substr(2, 9);
-    customBpmPresets.forEach((customBpmPreset) => {
-      if (customBpmPreset.id === presetId) {
-        createEmptyPreset();
-      } else {
-        customBpmPresets.push({
-          id: presetId,
-          name: "",
-          preset: "",
-          bpm: "",
-        });
-      }
-    }
-    );
-    return presetId;
-  }
-  function deletePresetById(id) {
-    customBpmPresets.forEach((customBpmPreset) => {
-      if (customBpmPreset.id === id) {
-        customBpmPresets.splice(customBpmPresets.indexOf(customBpmPreset), 1);
-      }
-    });
-  }
-
   const customBpmPresetsContainer = document.getElementById(
     "customBpmPresetsContainer"
   );
-  const addCustomBpmPresetButton =
-    document.getElementById("addCustomBpmPreset");
+  const customBpmPresets = {};
 
-  addCustomBpmPresetButton.addEventListener("click", function () {
-    const customBpmPreset = document.createElement("div");
-    let presetId = createEmptyPreset();
-    customBpmPreset.classList.add("customBpmPreset");
-    customBpmPreset.innerHTML = `
-      <input type="text" class="customBpmPresetName" placeholder="Name">
-      <select class="customBpmPresetSelect"></select>
-      <input type="number" class="customBpmPresetBpm" placeholder="BPM">
-      <button class="deleteCustomBpmPreset" style="background-color:red;" id="${presetId}">Delete</button>
+  function editCustomBpmPreset(presetName, preset, presetDiv) {
+    presetDiv.innerHTML = `
+      <input type="text" class customBpmPresetName id="customBpmPresetName-${presetName}" value="${presetName}">
+      <select class="customBpmPresetPreset" id="customBpmPresetPreset-${presetName}">
+      </select>
+      <input type="number" class="customBpmPresetBpm" id="customBpmPresetBpm-${presetName}" value="${preset.bpm}">
+      <button class="customBpmPresetButton" id="saveCustomBpmPresetButton-${presetName}">Save</button>
+      <button class="customBpmPresetButton" id="cancelCustomBpmPresetButton-${presetName}">Cancel</button>
     `;
-    customBpmPresetsContainer.appendChild(customBpmPreset);
-    // populate and load presets into customBpmPresetPresetSelect
-    const customBpmPresetPresetSelect = customBpmPreset.querySelector(
-      ".customBpmPresetSelect"
+    let customBpmPresetPreset = document.getElementById(
+      `customBpmPresetPreset-${presetName}`
     );
     presetNames.forEach((presetName) => {
       const option = document.createElement("option");
       option.text = presetName;
-      customBpmPresetPresetSelect.add(option);
+      customBpmPresetPreset.add(option);
     });
-    // enable name input
-    const customBpmPresetName = customBpmPreset.querySelector(
-      ".customBpmPresetName"
+    const saveButton = document.getElementById(
+      `saveCustomBpmPresetButton-${presetName}`
     );
-    customBpmPresetName.addEventListener("change", function () {
-      customBpmPresets.forEach((customBpmPreset) => {
-        if (customBpmPreset.id === presetId) {
-          customBpmPreset.name = customBpmPresetName.value;
-        }
+    const cancelButton = document.getElementById(
+      `cancelCustomBpmPresetButton-${presetName}`
+    );
+    saveButton.addEventListener("click", function () {
+      const newPresetName = document.getElementById(
+        `customBpmPresetName-${presetName}`
+      ).value;
+      const newPreset = {
+        preset: document.getElementById(
+          `customBpmPresetPreset-${presetName}`
+        ).value,
+        bpm: document.getElementById(`customBpmPresetBpm-${presetName}`).value,
+      };
+      customBpmPresets[newPresetName] = newPreset;
+      delete customBpmPresets[presetName];
+      generateCustomBpmPresets();
+    }
+    );
+    cancelButton.addEventListener("click", function () {
+      generateCustomBpmPresets();
+    }
+    );
+  }
+
+  function generateCustomBpmPresets() {
+    customBpmPresetsContainer.innerHTML = "";
+    Object.keys(customBpmPresets).forEach((presetName) => {
+      const preset = customBpmPresets[presetName];
+      const presetDiv = document.createElement("div");
+      presetDiv.classList.add("customBpmPreset");
+      presetDiv.innerHTML = `
+        <div class="customBpmPresetName">${presetName}</div>
+        <div class="customBpmPresetPreset">${preset.preset}</div>
+        <div class="customBpmPresetBpm">${preset.bpm} BPM</div>
+        <button class="customBpmPresetButton" id="editCustomBpmPresetButton-${presetName}">Edit</button>
+        <button class="customBpmPresetButton" id="deleteCustomBpmPresetButton-${presetName}">Delete</button>
+      `;
+      customBpmPresetsContainer.appendChild(presetDiv);
+      const deleteButton = document.getElementById(
+        `deleteCustomBpmPresetButton-${presetName}`
+      );
+      const editButton = document.getElementById(
+        `editCustomBpmPresetButton-${presetName}`
+      );
+      editButton.addEventListener("click", function () {
+        editCustomBpmPreset(presetName, preset, presetDiv);
       });
-      console.log(customBpmPresets);
-    });
-    // enable preset selection
-    customBpmPresetPresetSelect.addEventListener("change", function () {
-      customBpmPresets.forEach((customBpmPreset) => {
-        if (customBpmPreset.id === presetId) {
-          customBpmPreset.preset = customBpmPresetPresetSelect.value;
-        }
+      deleteButton.addEventListener("click", function () {
+        delete customBpmPresets[presetName];
+        generateCustomBpmPresets();
       });
-      console.log(customBpmPresets);
     });
-    // enable preset deletion
-    document.getElementById(presetId).addEventListener("click", function () {
-      deletePresetById(presetId);
-      customBpmPresetsContainer.removeChild(customBpmPreset);
-      console.log(customBpmPresets);
-    });
+    console.log(customBpmPresets);
+  }
+
+  function addNewEmptyPreset() {
+    const newPresetName = prompt("Enter a unique name for the new preset:");
+    if (newPresetName) {
+      const newPreset = {
+        preset: presetSelect.value,
+        bpm: 120,
+      };
+      customBpmPresets[newPresetName] = newPreset;
+      generateCustomBpmPresets();
+    }
+  }
+
+  let addCustomBpmPresetButton = document.getElementById("addCustomBpmPreset");
+  addCustomBpmPresetButton.addEventListener("click", function () {
+    addNewEmptyPreset();
   });
 
   // register bpm via spacebar and update bpm display.
