@@ -84,7 +84,7 @@ window.addEventListener("load", async function () {
   let currentPresetName = ""
   function loadPreset(presetName) {
     let _preset = presets[presetName];
-    visualizer.loadPreset(_preset, 2.0); // 2nd argument is the number of seconds to blend presets
+    visualizer.loadPreset(_preset, 5.0); // 2nd argument is the number of seconds to blend presets
     currentPresetName = presetName
     presetDisplay.innerHTML = `Preset: ${truncateString(presetName, 30)}`;
     presetSelect.value = presetName;
