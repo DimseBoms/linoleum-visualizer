@@ -144,40 +144,84 @@ window.addEventListener("load", async function () {
   });
 
   // custom bpm presets
-  const presetIds = [];
-  function generatePresetId() {
+  const customBpmPresets = [];
+  function createEmptyPreset() {
     const presetId = Math.random().toString(36).substr(2, 9);
-    if (presetIds.includes(presetId)) {
-      generatePresetId();
-    } else {
-      presetIds.push(presetId);
-      return presetId;
+    customBpmPresets.forEach((customBpmPreset) => {
+      if (customBpmPreset.id === presetId) {
+        createEmptyPreset();
+      } else {
+        customBpmPresets.push({
+          id: presetId,
+          name: "",
+          preset: "",
+          bpm: "",
+        });
+      }
     }
+    );
+    return presetId;
   }
-  function deletePresetId(presetId) {
-    presetIds.splice(presetIds.indexOf(presetId), 1);
+  function deletePresetById(id) {
+    customBpmPresets.forEach((customBpmPreset) => {
+      if (customBpmPreset.id === id) {
+        customBpmPresets.splice(customBpmPresets.indexOf(customBpmPreset), 1);
+      }
+    });
   }
 
   const customBpmPresetsContainer = document.getElementById(
     "customBpmPresetsContainer"
   );
-  const addCustomBpmPresetButton = document.getElementById(
-    "addCustomBpmPreset"
-  );
+  const addCustomBpmPresetButton =
+    document.getElementById("addCustomBpmPreset");
 
   addCustomBpmPresetButton.addEventListener("click", function () {
     const customBpmPreset = document.createElement("div");
-    let presetId = generatePresetId();
+    let presetId = createEmptyPreset();
     customBpmPreset.classList.add("customBpmPreset");
     customBpmPreset.innerHTML = `
       <input type="text" class="customBpmPresetName" placeholder="Name">
-      <input type="text" class="customBpmPresetBpm" placeholder="BPM">
-      <button class="deleteCustomBpmPreset" id="${presetId}">Delete</button>
+      <select class="customBpmPresetSelect"></select>
+      <input type="number" class="customBpmPresetBpm" placeholder="BPM">
+      <button class="deleteCustomBpmPreset" style="background-color:red;" id="${presetId}">Delete</button>
     `;
     customBpmPresetsContainer.appendChild(customBpmPreset);
+    // populate and load presets into customBpmPresetPresetSelect
+    const customBpmPresetPresetSelect = customBpmPreset.querySelector(
+      ".customBpmPresetSelect"
+    );
+    presetNames.forEach((presetName) => {
+      const option = document.createElement("option");
+      option.text = presetName;
+      customBpmPresetPresetSelect.add(option);
+    });
+    // enable name input
+    const customBpmPresetName = customBpmPreset.querySelector(
+      ".customBpmPresetName"
+    );
+    customBpmPresetName.addEventListener("change", function () {
+      customBpmPresets.forEach((customBpmPreset) => {
+        if (customBpmPreset.id === presetId) {
+          customBpmPreset.name = customBpmPresetName.value;
+        }
+      });
+      console.log(customBpmPresets);
+    });
+    // enable preset selection
+    customBpmPresetPresetSelect.addEventListener("change", function () {
+      customBpmPresets.forEach((customBpmPreset) => {
+        if (customBpmPreset.id === presetId) {
+          customBpmPreset.preset = customBpmPresetPresetSelect.value;
+        }
+      });
+      console.log(customBpmPresets);
+    });
+    // enable preset deletion
     document.getElementById(presetId).addEventListener("click", function () {
-      deletePresetId(presetId);
+      deletePresetById(presetId);
       customBpmPresetsContainer.removeChild(customBpmPreset);
+      console.log(customBpmPresets);
     });
   });
 

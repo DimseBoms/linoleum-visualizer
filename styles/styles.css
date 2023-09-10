@@ -28,8 +28,26 @@
   margin-bottom: 12px;
 }
 
+.customBpmPreset {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  border: black 1px solid;
+  border-radius: 8px;
+}
+
+.deleteCustomBpmPreset {
+  background-color: red;
+}
+
 .presetSelect {
   max-width: 80%;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.customBpmPresetSelect {
+  max-width: 20%;
   padding: 8px;
   cursor: pointer;
 }
