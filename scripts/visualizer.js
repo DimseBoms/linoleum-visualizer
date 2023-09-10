@@ -84,7 +84,7 @@ window.addEventListener("load", async function () {
   let currentPresetName = ""
   function loadPreset(presetName) {
     let _preset = presets[presetName];
-    visualizer.loadPreset(_preset, 5.0); // 2nd argument is the number of seconds to blend presets
+    visualizer.loadPreset(_preset, 2.0); // 2nd argument is the number of seconds to blend presets
     currentPresetName = presetName
     presetDisplay.innerHTML = `Preset: ${truncateString(presetName, 30)}`;
     presetSelect.value = presetName;
@@ -107,6 +107,25 @@ window.addEventListener("load", async function () {
     loadPreset(presetSelect.value);
     // save preset to local storage
     localStorage.setItem("currentPreset", presetSelect.value);
+  });
+
+  // enable preset switching with arrow keys
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowUp") {
+      const index = presetNames.indexOf(currentPresetName);
+      if (index > 0) {
+        loadPreset(presetNames[index - 1]);
+        // save preset to local storage
+        localStorage.setItem("currentPreset", presetNames[index - 1]);
+      }
+    } else if (event.key === "ArrowDown") {
+      const index = presetNames.indexOf(currentPresetName);
+      if (index < presetNames.length - 1) {
+        loadPreset(presetNames[index + 1]);
+        // save preset to local storage
+        localStorage.setItem("currentPreset", presetNames[index + 1]);
+      }
+    }
   });
 
   function truncateString(str, num) {
@@ -152,7 +171,7 @@ window.addEventListener("load", async function () {
 
   function editCustomBpmPreset(presetName, preset, presetDiv) {
     presetDiv.innerHTML = `
-      <input type="text" class customBpmPresetName id="customBpmPresetName-${presetName}" value="${presetName}">
+      <input type="text" class="customBpmPresetName" id="customBpmPresetName-${presetName}" value="${presetName}">
       <select class="customBpmPresetPreset" id="customBpmPresetPreset-${presetName}">
       </select>
       <input type="number" class="customBpmPresetBpm" id="customBpmPresetBpm-${presetName}" value="${preset.bpm}">
