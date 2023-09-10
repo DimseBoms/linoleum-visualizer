@@ -135,7 +135,7 @@ window.addEventListener("load", async function () {
   const customBpmPresetsContainer = document.getElementById(
     "customBpmPresetsContainer"
   );
-  const customBpmPresets = {};
+  let customBpmPresets = {};
 
   function editCustomBpmPreset(presetName, preset, presetDiv) {
     presetDiv.innerHTML = `
@@ -233,7 +233,42 @@ window.addEventListener("load", async function () {
     addNewEmptyPreset();
   });
 
-  console.log(visualizer)
+  // load settings from file
+  const loadSettingsButton = document.getElementById("loadSettingsButton");
+  loadSettingsButton.addEventListener("click", function () {
+    const settingsInput = document.createElement("input");
+    settingsInput.type = "file";
+    settingsInput.accept = "application/json";
+    settingsInput.click();
+    settingsInput.addEventListener("change", function () {
+      const file = settingsInput.files[0];
+      const reader = new FileReader();
+      reader.addEventListener("load", function (event) {
+        const settings = JSON.parse(event.target.result);
+        customBpmPresets = settings.presets;
+        generateCustomBpmPresets();
+        loadPreset(settings.currentPreset);
+      });
+      reader.readAsText(file);
+    });
+  });
+
+  // save settings to file
+  const saveSettingsButton = document.getElementById("saveSettingsButton");
+  saveSettingsButton.addEventListener("click", function () {
+    const settings = {
+      presets: customBpmPresets,
+      currentPreset: currentPresetName,
+    };
+    const settingsBlob = new Blob([JSON.stringify(settings)], {
+      type: "application/json",
+    });
+    const settingsUrl = URL.createObjectURL(settingsBlob);
+    const settingsLink = document.createElement("a");
+    settingsLink.href = settingsUrl;
+    settingsLink.download = "settings.json";
+    settingsLink.click();
+  });
 
   // update preset when bpm changes to the preset with the closest bpm
   function updatePreset(bpm) {
