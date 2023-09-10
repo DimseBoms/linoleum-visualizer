@@ -22,16 +22,6 @@ window.addEventListener("load", async function () {
     }
   });
 
-  document.addEventListener("keydown", function (event) {
-    if (event.key === "f") {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        document.documentElement.requestFullscreen();
-      }
-    }
-  });
-
   // create audiocontext
   const audioContext = new AudioContext();
 
@@ -91,26 +81,25 @@ window.addEventListener("load", async function () {
   const presetNames = Object.keys(presets);
   const presetSelect = document.getElementById("mainPresetSelect");
 
+  let currentPresetName = ""
+  function loadPreset(presetName) {
+    let _preset = presets[presetName];
+    visualizer.loadPreset(_preset, 5.0); // 2nd argument is the number of seconds to blend presets
+    currentPresetName = presetName
+    presetDisplay.innerHTML = `Preset: ${truncateString(presetName, 30)}`;
+    presetSelect.value = presetName;
+  }
+
   presetNames.forEach((presetName) => {
     const option = document.createElement("option");
     option.text = presetName;
     presetSelect.add(option);
   });
-  const preset =
-    presets["Flexi, martin + geiss - dedicated to the sherwin maxawow"];
-  visualizer.loadPreset(preset, 5.0); // 2nd argument is the number of seconds to blend presets
-  presetSelect.value =
-    "Flexi, martin + geiss - dedicated to the sherwin maxawow";
-  presetDisplay.innerHTML = `Preset: ${truncateString(presetSelect.value, 30)}`;
+  loadPreset(presetSelect.value);
 
   // enable preset selection
   presetSelect.addEventListener("change", function () {
-    const preset = presets[presetSelect.value];
-    visualizer.loadPreset(preset, 5.0);
-    presetDisplay.innerHTML = `Preset: ${truncateString(
-      presetSelect.value,
-      30
-    )}`;
+    loadPreset(presetSelect.value);
   });
 
   function truncateString(str, num) {
@@ -165,6 +154,7 @@ window.addEventListener("load", async function () {
       option.text = presetName;
       customBpmPresetPreset.add(option);
     });
+    customBpmPresetPreset.value = preset.preset;
     const saveButton = document.getElementById(
       `saveCustomBpmPresetButton-${presetName}`
     );
@@ -181,8 +171,9 @@ window.addEventListener("load", async function () {
         ).value,
         bpm: document.getElementById(`customBpmPresetBpm-${presetName}`).value,
       };
-      customBpmPresets[newPresetName] = newPreset;
+      console.log(newPreset);
       delete customBpmPresets[presetName];
+      customBpmPresets[newPresetName] = newPreset;
       generateCustomBpmPresets();
     }
     );
@@ -200,7 +191,9 @@ window.addEventListener("load", async function () {
       presetDiv.classList.add("customBpmPreset");
       presetDiv.innerHTML = `
         <div class="customBpmPresetName">${presetName}</div>
+        <div class="customBpmPresetNameDivider">-</div>
         <div class="customBpmPresetPreset">${preset.preset}</div>
+        <div class="customBpmPresetNameDivider">-</div>
         <div class="customBpmPresetBpm">${preset.bpm} BPM</div>
         <button class="customBpmPresetButton" id="editCustomBpmPresetButton-${presetName}">Edit</button>
         <button class="customBpmPresetButton" id="deleteCustomBpmPresetButton-${presetName}">Delete</button>
@@ -240,6 +233,27 @@ window.addEventListener("load", async function () {
     addNewEmptyPreset();
   });
 
+  console.log(visualizer)
+
+  // update preset when bpm changes to the preset with the closest bpm
+  function updatePreset(bpm) {
+    let closestPreset = "";
+    let closestPresetBpm = 0;
+    let closestPresetDifference = 100000;
+    Object.keys(customBpmPresets).forEach((presetName) => {
+      const preset = customBpmPresets[presetName];
+      const difference = Math.abs(preset.bpm - bpm);
+      if (difference < closestPresetDifference) {
+        closestPreset = presetName;
+        closestPresetBpm = preset.bpm;
+        closestPresetDifference = difference;
+      }
+    });
+    if (closestPresetBpm !== 0) {
+      loadPreset(customBpmPresets[closestPreset].preset);
+    }
+  }
+
   // register bpm via spacebar and update bpm display.
   // uses the last 10 spacebar presses to calculate bpm.
   let keyPressArray = [];
@@ -254,6 +268,7 @@ window.addEventListener("load", async function () {
           (keyPressArray[keyPressArray.length - 1] - keyPressArray[0] + 0.0)
       );
       bpmDisplay.innerHTML = `BPM: ${bpm}`;
+      updatePreset(bpm);
     }
   });
 });
