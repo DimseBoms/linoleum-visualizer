@@ -22,6 +22,16 @@ window.addEventListener("load", async function () {
     }
   });
 
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "f") {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        document.documentElement.requestFullscreen();
+      }
+    }
+  });
+
   // create audiocontext
   const audioContext = new AudioContext();
 
@@ -31,12 +41,17 @@ window.addEventListener("load", async function () {
   canvas.height = document.documentElement.clientHeight;
   canvas.style.backgroundColor = "#ffffff";
 
+  const bpmDisplay = document.getElementById("bpmDisplay");
+  const presetDisplay = document.getElementById("presetDisplay");
+
   canvas.addEventListener("click", function () {
     if (!settingsModal.classList.contains("hidden")) {
       settingsModal.classList.toggle("hidden");
     } else {
       settingsIcon.classList.toggle("hidden");
       fullscreenButton.classList.toggle("hidden");
+      bpmDisplay.classList.toggle("hidden");
+      presetDisplay.classList.toggle("hidden");
       if (document.fullscreenElement) {
         if (document.body.style.cursor === "none") {
           document.body.style.cursor = "default";
@@ -74,7 +89,8 @@ window.addEventListener("load", async function () {
   // populate and load presets
   const presets = butterchurnPresets.getPresets();
   const presetNames = Object.keys(presets);
-  const presetSelect = document.getElementById("presetSelect");
+  const presetSelect = document.getElementById("mainPresetSelect");
+
   presetNames.forEach((presetName) => {
     const option = document.createElement("option");
     option.text = presetName;
@@ -85,12 +101,24 @@ window.addEventListener("load", async function () {
   visualizer.loadPreset(preset, 5.0); // 2nd argument is the number of seconds to blend presets
   presetSelect.value =
     "Flexi, martin + geiss - dedicated to the sherwin maxawow";
+  presetDisplay.innerHTML = `Preset: ${truncateString(presetSelect.value, 30)}`;
 
   // enable preset selection
   presetSelect.addEventListener("change", function () {
     const preset = presets[presetSelect.value];
     visualizer.loadPreset(preset, 5.0);
+    presetDisplay.innerHTML = `Preset: ${truncateString(
+      presetSelect.value,
+      30
+    )}`;
   });
+
+  function truncateString(str, num) {
+    if (str.length <= num) {
+      return str;
+    }
+    return str.slice(0, num) + "...";
+  }
 
   // ensure canvas always fills the window
   window.addEventListener("resize", function () {
@@ -113,43 +141,60 @@ window.addEventListener("load", async function () {
   navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
     const microphone = audioContext.createMediaStreamSource(stream);
     visualizer.connectAudio(microphone);
-    // save the last x seconds of audio, decode the audio to get the buffer
-    // and read that array as a buffer which is sent to calcTempo
-    var bufferSourceNode = audioContext.createBufferSource();
-    var scriptProcessorNode = audioContext.createScriptProcessor(4096, 1, 1);
-    scriptProcessorNode.connect(audioContext.destination);
-    microphone.connect(scriptProcessorNode);
-    var duration = 10; // capture the last 10 seconds of audio
-    var sampleRate = audioContext.sampleRate;
-    var bufferSize = duration * sampleRate; // 10 seconds * 44100 samples per second = 441000 samples
-    var audioData = new Float32Array(bufferSize); // create a typed array of 441000 elements
-    audioData.fill(0); // fill the array with zeros
-    scriptProcessorNode.onaudioprocess = function(e) {
-      var inputBuffer = e.inputBuffer.getChannelData(0);
-      var bufferLength = inputBuffer.length;
-      // shift the audio data array by one buffer length
-      audioData.copyWithin(0, bufferLength, bufferSize);
-      // copy the input buffer to the end of the audio data array
-      audioData.set(inputBuffer, bufferSize - bufferLength);
-    };
   });
 
-  var calcTempo = function (buffer) {
-    var audioData = [];
-    // Take the average of the two channels
-    if (buffer.numberOfChannels == 2) {
-      var channel1Data = buffer.getChannelData(0);
-      var channel2Data = buffer.getChannelData(1);
-      var length = channel1Data.length;
-      for (var i = 0; i < length; i++) {
-        audioData[i] = (channel1Data[i] + channel2Data[i]) / 2;
-      }
+  // custom bpm presets
+  const presetIds = [];
+  function generatePresetId() {
+    const presetId = Math.random().toString(36).substr(2, 9);
+    if (presetIds.includes(presetId)) {
+      generatePresetId();
     } else {
-      audioData = buffer.getChannelData(0);
+      presetIds.push(presetId);
+      return presetId;
     }
-    var mt = new MusicTempo(audioData);
+  }
+  function deletePresetId(presetId) {
+    presetIds.splice(presetIds.indexOf(presetId), 1);
+  }
 
-    console.log(mt.tempo);
-    console.log(mt.beats);
-  };
+  const customBpmPresetsContainer = document.getElementById(
+    "customBpmPresetsContainer"
+  );
+  const addCustomBpmPresetButton = document.getElementById(
+    "addCustomBpmPreset"
+  );
+
+  addCustomBpmPresetButton.addEventListener("click", function () {
+    const customBpmPreset = document.createElement("div");
+    let presetId = generatePresetId();
+    customBpmPreset.classList.add("customBpmPreset");
+    customBpmPreset.innerHTML = `
+      <input type="text" class="customBpmPresetName" placeholder="Name">
+      <input type="text" class="customBpmPresetBpm" placeholder="BPM">
+      <button class="deleteCustomBpmPreset" id="${presetId}">Delete</button>
+    `;
+    customBpmPresetsContainer.appendChild(customBpmPreset);
+    document.getElementById(presetId).addEventListener("click", function () {
+      deletePresetId(presetId);
+      customBpmPresetsContainer.removeChild(customBpmPreset);
+    });
+  });
+
+  // register bpm via spacebar and update bpm display.
+  // uses the last 10 spacebar presses to calculate bpm.
+  let keyPressArray = [];
+  document.addEventListener("keydown", function (event) {
+    if (event.key === " ") {
+      keyPressArray.push(Date.now());
+      if (keyPressArray.length > 10) {
+        keyPressArray.shift();
+      }
+      const bpm = Math.round(
+        (60000 * keyPressArray.length) /
+          (keyPressArray[keyPressArray.length - 1] - keyPressArray[0] + 0.0)
+      );
+      bpmDisplay.innerHTML = `BPM: ${bpm}`;
+    }
+  });
 });
