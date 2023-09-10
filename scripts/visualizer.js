@@ -95,11 +95,18 @@ window.addEventListener("load", async function () {
     option.text = presetName;
     presetSelect.add(option);
   });
-  loadPreset(presetSelect.value);
+  // load preset from local storage
+  if (localStorage.getItem("currentPreset")) {
+    loadPreset(localStorage.getItem("currentPreset"));
+  } else {
+    loadPreset(presetSelect.value);
+  }
 
   // enable preset selection
   presetSelect.addEventListener("change", function () {
     loadPreset(presetSelect.value);
+    // save preset to local storage
+    localStorage.setItem("currentPreset", presetSelect.value);
   });
 
   function truncateString(str, num) {
@@ -135,7 +142,13 @@ window.addEventListener("load", async function () {
   const customBpmPresetsContainer = document.getElementById(
     "customBpmPresetsContainer"
   );
+
   let customBpmPresets = {};
+  // load custom presets from local storage
+  if (localStorage.getItem("customBpmPresets")) {
+    customBpmPresets = JSON.parse(localStorage.getItem("customBpmPresets"));
+    generateCustomBpmPresets();
+  }
 
   function editCustomBpmPreset(presetName, preset, presetDiv) {
     presetDiv.innerHTML = `
@@ -175,6 +188,11 @@ window.addEventListener("load", async function () {
       delete customBpmPresets[presetName];
       customBpmPresets[newPresetName] = newPreset;
       generateCustomBpmPresets();
+      // save to local storage
+      localStorage.setItem(
+        "customBpmPresets",
+        JSON.stringify(customBpmPresets)
+      );
     }
     );
     cancelButton.addEventListener("click", function () {
@@ -211,6 +229,11 @@ window.addEventListener("load", async function () {
       deleteButton.addEventListener("click", function () {
         delete customBpmPresets[presetName];
         generateCustomBpmPresets();
+        // save to local storage
+        localStorage.setItem(
+          "customBpmPresets",
+          JSON.stringify(customBpmPresets)
+        );
       });
     });
     console.log(customBpmPresets);
@@ -225,6 +248,8 @@ window.addEventListener("load", async function () {
       };
       customBpmPresets[newPresetName] = newPreset;
       generateCustomBpmPresets();
+      // save to local storage
+      localStorage.setItem("customBpmPresets", JSON.stringify(customBpmPresets));
     }
   }
 
@@ -251,6 +276,8 @@ window.addEventListener("load", async function () {
       });
       reader.readAsText(file);
     });
+    // save to local storage
+    localStorage.setItem("customBpmPresets", JSON.stringify(customBpmPresets));
   });
 
   // save settings to file
@@ -271,6 +298,26 @@ window.addEventListener("load", async function () {
   });
 
   // update preset when bpm changes to the preset with the closest bpm
+  const presetBpmControlCheckbox = document.getElementById(
+    "presetBpmControl"
+  );
+  // load button state from local storage
+  if (localStorage.getItem("presetBpmControl") === "true" || localStorage.getItem("presetBpmControl") === null) {
+    presetBpmControlCheckbox.checked = true;
+  } else {
+    presetBpmControlCheckbox.checked = false;
+  }
+  presetBpmControlCheckbox.addEventListener("change", function () {
+    if (presetBpmControlCheckbox.checked) {
+      // save button state to local storage
+      localStorage.setItem("presetBpmControl", "true");
+    } else {
+      // save button state to local storage
+      localStorage.setItem("presetBpmControl", "false");
+    }
+  });
+
+  // update preset when bpm changes to the preset with the closest bpm
   function updatePreset(bpm) {
     let closestPreset = "";
     let closestPresetBpm = 0;
@@ -284,7 +331,7 @@ window.addEventListener("load", async function () {
         closestPresetDifference = difference;
       }
     });
-    if (closestPresetBpm !== 0) {
+    if (closestPresetBpm !== 0 && presetBpmControlCheckbox.checked) {
       loadPreset(customBpmPresets[closestPreset].preset);
     }
   }
