@@ -79,12 +79,22 @@ window.addEventListener("load", async function () {
 
   let currentPresetName = "";
   const gainNode = audioContext.createGain();
-  function loadPreset(presetName) {
+  function loadPreset(presetName, customPresetName = false) {
     let _preset = presets[presetName];
     gainNode.gain.value = 1;
     visualizer.loadPreset(_preset, 5.0); // 2nd argument is the number of seconds to blend presets
     currentPresetName = presetName;
-    presetDisplay.innerHTML = `Preset: ${truncateString(presetName, 30)}`;
+    if (!customPresetName) {
+      presetDisplay.innerHTML = `Preset: ${truncateString(
+        currentPresetName,
+        30
+      )}`;
+    } else {
+      presetDisplay.innerHTML = `Preset: ${truncateString(
+        customPresetName,
+        30
+      )}`;
+    }
     presetSelect.value = presetName;
   }
 
@@ -313,7 +323,7 @@ window.addEventListener("load", async function () {
     Object.keys(customBpmPresets).forEach((presetName) => {
       const preset = customBpmPresets[presetName];
       if (preset.keybind === event.key) {
-        loadPreset(preset.preset);
+        loadPreset(preset.preset, Object.keys(customBpmPresets).find(key => customBpmPresets[key] === preset));
       }
     });
   });
