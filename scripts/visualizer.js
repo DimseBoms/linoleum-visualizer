@@ -226,11 +226,9 @@ window.addEventListener("load", async function () {
 
       let _presets = {};
       Object.keys(customBpmPresets).forEach((presetName) => {
-        console.log(presetName)
-        console.log(preset)
+
         if (presetName !== Object.keys(customBpmPresets).find(key => customBpmPresets[key] === preset)) {
           _presets[presetName] = customBpmPresets[presetName];
-          console.log("not equal")
         } else {
           _presets[document.getElementById(`customBpmPresetName-${presetName}`).value] = {
             preset: document.getElementById(`customBpmPresetPreset-${presetName}`)
@@ -238,7 +236,6 @@ window.addEventListener("load", async function () {
             bpm: document.getElementById(`customBpmPresetBpm-${presetName}`).value,
             keybind: customBpmPresets[presetName].keybind,
           };
-          console.log("equal")
         }
       });
       customBpmPresets = _presets; 
@@ -256,9 +253,7 @@ window.addEventListener("load", async function () {
 
   function generateCustomBpmPresets() {
     customBpmPresetsContainer.innerHTML = "";
-    // sort presets by index
-    let _customBpmPresets = {};
-    Object.keys(_customBpmPresets).forEach((presetName) => {
+    Object.keys(customBpmPresets).forEach((presetName) => {
       const preset = customBpmPresets[presetName];
       const presetDiv = document.createElement("div");
       presetDiv.classList.add("customBpmPreset");
@@ -311,7 +306,6 @@ window.addEventListener("load", async function () {
         );
       });
     });
-    console.log(customBpmPresets);
   }
 
   // add function to watch for keybinds
