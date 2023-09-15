@@ -335,7 +335,6 @@ window.addEventListener("load", async function () {
         preset: presetSelect.value,
         bpm: 120,
         keybind: "",
-        index: Object.keys(customBpmPresets).length,
       };
       customBpmPresets[newPresetName] = newPreset;
       generateCustomBpmPresets();
