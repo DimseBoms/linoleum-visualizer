@@ -61,14 +61,10 @@ window.addEventListener("load", async function () {
   });
 
   // create initial visualiser
-  const visualizer = butterchurn.default.createVisualizer(
-    audioContext,
-    canvas,
-    {
-      width: this.document.documentElement.clientWidth,
-      height: this.document.documentElement.clientHeight,
-    }
-  );
+  let visualizer = butterchurn.default.createVisualizer(audioContext, canvas, {
+    width: this.document.documentElement.clientWidth,
+    height: this.document.documentElement.clientHeight,
+  });
 
   // set initial renderer size
   visualizer.setRendererSize(
@@ -81,14 +77,34 @@ window.addEventListener("load", async function () {
   const presetNames = Object.keys(presets);
   const presetSelect = document.getElementById("mainPresetSelect");
 
-  let currentPresetName = ""
+  let currentPresetName = "";
+  const gainNode = audioContext.createGain();
   function loadPreset(presetName) {
     let _preset = presets[presetName];
+    gainNode.gain.value = 1;
     visualizer.loadPreset(_preset, 5.0); // 2nd argument is the number of seconds to blend presets
-    currentPresetName = presetName
+    currentPresetName = presetName;
     presetDisplay.innerHTML = `Preset: ${truncateString(presetName, 30)}`;
     presetSelect.value = presetName;
   }
+
+  function clearPreset() {
+    visualizer.loadPreset(presets["Geiss - Reaction Diffusion 2"], 1);
+    gainNode.gain.value = 0;
+    currentPresetName = "";
+    presetDisplay.innerHTML = `Preset: ${truncateString(
+      currentPresetName,
+      30
+    )}`;
+    presetSelect.value = "";
+  }
+
+  // bind space bar key to clear preset
+  document.addEventListener("keydown", function (event) {
+    if (event.key === " ") {
+      clearPreset();
+    }
+  });
 
   presetNames.forEach((presetName) => {
     const option = document.createElement("option");
@@ -155,7 +171,9 @@ window.addEventListener("load", async function () {
   // create audioNode from microphone
   navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
     const microphone = audioContext.createMediaStreamSource(stream);
-    visualizer.connectAudio(microphone);
+    // create gainNode to control volume
+    microphone.connect(gainNode);
+    visualizer.connectAudio(gainNode);
   });
 
   const customBpmPresetsContainer = document.getElementById(
@@ -194,39 +212,58 @@ window.addEventListener("load", async function () {
       `cancelCustomBpmPresetButton-${presetName}`
     );
     saveButton.addEventListener("click", function () {
-      const newPresetName = document.getElementById(
-        `customBpmPresetName-${presetName}`
-      ).value;
-      const newPreset = {
-        preset: document.getElementById(
-          `customBpmPresetPreset-${presetName}`
-        ).value,
-        bpm: document.getElementById(`customBpmPresetBpm-${presetName}`).value,
-      };
-      console.log(newPreset);
-      delete customBpmPresets[presetName];
-      customBpmPresets[newPresetName] = newPreset;
+      // const newPresetName = document.getElementById(
+      //   `customBpmPresetName-${presetName}`
+      // ).value;
+      // const newPreset = {
+      //   preset: document.getElementById(`customBpmPresetPreset-${presetName}`)
+      //     .value,
+      //   bpm: document.getElementById(`customBpmPresetBpm-${presetName}`).value,
+      // };
+      // console.log(newPreset);
+      // delete customBpmPresets[presetName];
+      // customBpmPresets[newPresetName] = newPreset;
+
+      let _presets = {};
+      Object.keys(customBpmPresets).forEach((presetName) => {
+        console.log(presetName)
+        console.log(preset)
+        if (presetName !== Object.keys(customBpmPresets).find(key => customBpmPresets[key] === preset)) {
+          _presets[presetName] = customBpmPresets[presetName];
+          console.log("not equal")
+        } else {
+          _presets[document.getElementById(`customBpmPresetName-${presetName}`).value] = {
+            preset: document.getElementById(`customBpmPresetPreset-${presetName}`)
+              .value,
+            bpm: document.getElementById(`customBpmPresetBpm-${presetName}`).value,
+            keybind: customBpmPresets[presetName].keybind,
+          };
+          console.log("equal")
+        }
+      });
+      customBpmPresets = _presets; 
       generateCustomBpmPresets();
       // save to local storage
       localStorage.setItem(
         "customBpmPresets",
         JSON.stringify(customBpmPresets)
       );
-    }
-    );
+    });
     cancelButton.addEventListener("click", function () {
       generateCustomBpmPresets();
-    }
-    );
+    });
   }
 
   function generateCustomBpmPresets() {
     customBpmPresetsContainer.innerHTML = "";
-    Object.keys(customBpmPresets).forEach((presetName) => {
+    // sort presets by index
+    let _customBpmPresets = {};
+    Object.keys(_customBpmPresets).forEach((presetName) => {
       const preset = customBpmPresets[presetName];
       const presetDiv = document.createElement("div");
       presetDiv.classList.add("customBpmPreset");
       presetDiv.innerHTML = `
+        <button class="customBpmPresetButton" id="customBpmPresetKeybindButton-${presetName}">Keybind: <b>${preset.keybind ? preset.keybind : '⠀'}</b></button>
         <div class="customBpmPresetName">${presetName}</div>
         <div class="customBpmPresetNameDivider">-</div>
         <div class="customBpmPresetPreset">${preset.preset}</div>
@@ -236,6 +273,25 @@ window.addEventListener("load", async function () {
         <button class="customBpmPresetButton" id="deleteCustomBpmPresetButton-${presetName}">Delete</button>
       `;
       customBpmPresetsContainer.appendChild(presetDiv);
+      const keybindButton = document.getElementById(
+        `customBpmPresetKeybindButton-${presetName}`
+      );
+      keybindButton.addEventListener("click", function () {
+        keybindButton.innerHTML = "Press any key...";
+        document.addEventListener(
+          "keydown",
+          function (event) {
+            preset.keybind = event.key;
+            keybindButton.innerHTML = `Keybind: ${preset.keybind}`;
+            // save to local storage
+            localStorage.setItem(
+              "customBpmPresets",
+              JSON.stringify(customBpmPresets)
+            );
+          },
+          { once: true }
+        );
+      });
       const deleteButton = document.getElementById(
         `deleteCustomBpmPresetButton-${presetName}`
       );
@@ -258,17 +314,32 @@ window.addEventListener("load", async function () {
     console.log(customBpmPresets);
   }
 
+  // add function to watch for keybinds
+  document.addEventListener("keydown", function (event) {
+    Object.keys(customBpmPresets).forEach((presetName) => {
+      const preset = customBpmPresets[presetName];
+      if (preset.keybind === event.key) {
+        loadPreset(preset.preset);
+      }
+    });
+  });
+
   function addNewEmptyPreset() {
     const newPresetName = prompt("Enter a unique name for the new preset:");
     if (newPresetName) {
       const newPreset = {
         preset: presetSelect.value,
         bpm: 120,
+        keybind: "",
+        index: Object.keys(customBpmPresets).length,
       };
       customBpmPresets[newPresetName] = newPreset;
       generateCustomBpmPresets();
       // save to local storage
-      localStorage.setItem("customBpmPresets", JSON.stringify(customBpmPresets));
+      localStorage.setItem(
+        "customBpmPresets",
+        JSON.stringify(customBpmPresets)
+      );
     }
   }
 
@@ -317,11 +388,12 @@ window.addEventListener("load", async function () {
   });
 
   // update preset when bpm changes to the preset with the closest bpm
-  const presetBpmControlCheckbox = document.getElementById(
-    "presetBpmControl"
-  );
+  const presetBpmControlCheckbox = document.getElementById("presetBpmControl");
   // load button state from local storage
-  if (localStorage.getItem("presetBpmControl") === "true" || localStorage.getItem("presetBpmControl") === null) {
+  if (
+    localStorage.getItem("presetBpmControl") === "true" ||
+    localStorage.getItem("presetBpmControl") === null
+  ) {
     presetBpmControlCheckbox.checked = true;
   } else {
     presetBpmControlCheckbox.checked = false;
@@ -358,18 +430,18 @@ window.addEventListener("load", async function () {
   // register bpm via spacebar and update bpm display.
   // uses the last 10 spacebar presses to calculate bpm.
   let keyPressArray = [];
-  document.addEventListener("keydown", function (event) {
-    if (event.key === " ") {
-      keyPressArray.push(Date.now());
-      if (keyPressArray.length > 10) {
-        keyPressArray.shift();
-      }
-      const bpm = Math.round(
-        (60000 * keyPressArray.length) /
-          (keyPressArray[keyPressArray.length - 1] - keyPressArray[0] + 0.0)
-      );
-      bpmDisplay.innerHTML = `BPM: ${bpm}`;
-      updatePreset(bpm);
-    }
-  });
+  // document.addEventListener("keydown", function (event) {
+  //   if (event.key === " ") {
+  //     keyPressArray.push(Date.now());
+  //     if (keyPressArray.length > 10) {
+  //       keyPressArray.shift();
+  //     }
+  //     const bpm = Math.round(
+  //       (60000 * keyPressArray.length) /
+  //         (keyPressArray[keyPressArray.length - 1] - keyPressArray[0] + 0.0)
+  //     );
+  //     bpmDisplay.innerHTML = `BPM: ${bpm}`;
+  //     updatePreset(bpm);
+  //   }
+  // });
 });

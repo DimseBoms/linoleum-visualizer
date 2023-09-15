@@ -37,6 +37,7 @@
 .customBpmPreset {
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
   gap: 12px;
   border: black 1px solid;
   border-radius: 8px;
@@ -55,6 +56,12 @@
 .customBpmPresetName {
   max-width: 20%;
   padding: 8px;
+}
+
+.customBpmPresetButton {
+  max-width: 20%;
+  padding: 8px;
+  cursor: pointer;
 }
 
 .customBpmPresetPreset {
