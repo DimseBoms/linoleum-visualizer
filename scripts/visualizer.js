@@ -99,7 +99,7 @@ window.addEventListener("load", async function () {
   }
 
   function clearPreset() {
-    visualizer.loadPreset(presets["Geiss - Reaction Diffusion 2"], 1);
+    visualizer.loadPreset(presets["Aderrasi + Geiss - Airhandler (Kali Mix) - Canvas Mix"], 1);
     gainNode.gain.value = 0;
     currentPresetName = "";
     presetDisplay.innerHTML = `Preset: ${truncateString(
