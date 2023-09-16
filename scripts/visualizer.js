@@ -82,7 +82,7 @@ window.addEventListener("load", async function () {
   function loadPreset(presetName, customPresetName = false) {
     let _preset = presets[presetName];
     gainNode.gain.value = 1;
-    visualizer.loadPreset(_preset, 5.0); // 2nd argument is the number of seconds to blend presets
+    visualizer.loadPreset(_preset, 1.0); // 2nd argument is the number of seconds to blend presets
     currentPresetName = presetName;
     if (!customPresetName) {
       presetDisplay.innerHTML = `Preset: ${truncateString(
